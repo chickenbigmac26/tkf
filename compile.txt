@@ -1,0 +1,1 @@
+gcc -Wall -Wextra -lraylib -lGL -lopenal -lm -pthread -ldl -lX11 -lXrandr -lXinerama -lXi -lXxf86vm -lXcursor -o ~/Documents/tkf/cgol conways_game_of_life.c
