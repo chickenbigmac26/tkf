@@ -6,21 +6,28 @@
 
 #define width 1000
 #define height 1000
-#define size 10
+#define size 2
 
 typedef unsigned char Grid[width / size][width / size];
 
 int const gwidth = width / size;
 int const gheight = height / size;
 
+unsigned char paused = 0;
+
 Grid gridA;
 Grid gridB;
 
 void draw(Grid grid) {
+  Color awhite = {244, 24, 74, 255};
+  Color ablack = { 0, 2 ,2 , 20 };
   for (int x = 0; x < gwidth; x++)
     for (int y = 0; y < gwidth; y++)
-      if (grid[x][y] == 1)
-        DrawRectangle(x * size, y * size, size, size, DARKGRAY);
+      if (grid[x][y] == 1) {
+        DrawRectangle(x * size, y * size, size, size, awhite);
+      } else {
+        DrawRectangle(x * size, y * size, size, size, ablack);
+      }
 }
 
 //
@@ -45,6 +52,7 @@ void update(Grid const oldg, Grid newg) {
             if (ly >= 0 && ly < gheight) {
               // look at neighbour state and increment neighbours by 1 if it is
               // alive
+              // exclude self
               if (oldg[lx][ly] == 1 && !((dx == 0) && (dy == 0))) {
                 neighbours = neighbours + 1;
               }
@@ -74,34 +82,58 @@ void update(Grid const oldg, Grid newg) {
   }
 }
 
+void mouseDraw(Grid grid, unsigned char state) {
+  int mousegx = GetMousePosition().x / size;
+  int mousegy = GetMousePosition().y / size;
+
+  paused = 1;
+
+  grid[mousegx][mousegy] = state;
+}
+
 int main(void) {
   InitWindow(width, height, "cgol");
-  int midx = gwidth / 2;
-  int midy = gheight / 2;
-
+ 
   Grid *oldg = &gridA;
   Grid *newg = &gridB;
-  gridA[1][3] = 1;
-  gridA[2][3] = 1;
-  gridA[3][3] = 1;
-  gridA[3][2] = 1;
-  gridA[2][1] = 1;
-  // gridA[midx+2][midy+2] = 1;
 
-  SetTargetFPS(10);
+  for (int x = 0; x < gwidth; x++) {
+    gridA[x][gheight/2]=1;
+  }
+  
+  /* gridA[1][3] = 1; */
+  /* gridA[2][3] = 1; */
+  /* gridA[3][3] = 1; */
+  /* gridA[3][2] = 1; */
+  /* gridA[2][1] = 1; */
+ 
+
+  SetTargetFPS(60);
   while (!WindowShouldClose()) {
 
+    if (IsMouseButtonDown(MOUSE_BUTTON_LEFT)) {
+      mouseDraw(*oldg, 1);
+    } else if (IsMouseButtonDown(MOUSE_BUTTON_RIGHT)) {
+      mouseDraw(*oldg, 0);
+    } else {
+      paused = 0;
+    }
+   
+    
     BeginDrawing();
-    ClearBackground(BLACK);
+
+    //ClearBackground(BLACK);
     draw(*oldg);
-    update(*oldg, *newg);
+
 
     EndDrawing();
-
-    // swap pointers of newg and oldg
-    Grid *temp = oldg;
-    oldg = newg;
-    newg = temp;
+     if (paused == 0) {
+      update(*oldg, *newg);
+      // swap pointers of newg and oldg
+      Grid *temp = oldg;
+      oldg = newg;
+      newg = temp;
+    }
   }
 
   CloseWindow();
